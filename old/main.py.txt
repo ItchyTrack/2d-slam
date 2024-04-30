@@ -1,0 +1,60 @@
+import cv2
+import numpy as np
+
+before = cv2.imread("PastedGraphic-1.tiff", cv2.IMREAD_GRAYSCALE)
+after = cv2.imread("PastedGraphic-2.tiff", cv2.IMREAD_GRAYSCALE)
+img3 = cv2.imread("PastedGraphic-1.tiff", cv2.IMREAD_COLOR)
+cv2.imshow("before", before)
+cv2.imshow("after", after)
+
+flow = cv2.calcOpticalFlowFarneback(before, after, None, 0.5, 3, 40, 3, 5, 1.2, 0)
+print(flow.shape)
+# magnitude, angle = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+
+added_image = cv2.addWeighted(before, 0.5, after, 0.5, 0)
+cv2.imshow("combinedNoShfit.png", added_image)
+
+changex2 = 0
+changey2 = 0
+count = 0
+print(before)
+print(flow)
+for x in range(len(flow)):
+    for y in range(len(flow[x])):
+        # if after[x, y] < 100:
+        # print(after[x, y])
+        # print(flow[x, y])
+        count += 1
+        changex2 += flow[x, y, 0]
+        changey2 += flow[x, y, 1]
+changey = int(changex2 / count)
+changex = int(changey2 / count)
+print(changex, changey)
+shift = np.zeros_like(after)
+shift[
+    -min(changex, 0) : after.shape[0] - max(changex, 0),
+    -min(changey, 0) : after.shape[1] - max(changey, 0)
+] = after[
+    max(changex, 0) : after.shape[0] + min(changex, 0),
+    max(changey, 0) : after.shape[1] + min(changey, 0)
+]
+added_image2 = cv2.addWeighted(before, 0.5, shift, 0.5, 0)
+cv2.imshow("combinedWithShfit.png", added_image2)
+
+
+
+# mask = np.zeros_like(img3)
+# mask[..., 1] = 255
+# print(mask)
+# mask[..., 1] = angle * 180 / np.pi / 2
+
+# # Sets image value according to the optical flow
+# # magnitude (normalized)
+# mask[..., 2] = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX)
+
+# # Converts HSV to RGB (BGR) color representation
+# rgb = cv2.cvtColor(mask, cv2.COLOR_HSV2BGR)
+# cv2.imshow("flow", rgb)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
