@@ -29,7 +29,7 @@ class Bin:
             
         if min_x < 0 or min_y < 0 or max_x >= self.array.shape[1] or max_y >= self.array.shape[0]:
             array = np.zeros((max_y - min_y + 2, max_x - min_x + 2))
-            array[-min_x : self.array.shape[0] - min_x, -min_y : self.array.shape[1] - min_y] = self.array
+            array[-min_y : self.array.shape[0] - min_y, -min_x : self.array.shape[1] - min_x] = self.array
             self.array = array
         # intPoints = [(int(i[0] / binSize), int(i[1] / binSize)) for i in points]
         for point in zip(x, y):

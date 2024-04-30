@@ -10,7 +10,8 @@ def dda(x1, y1, x2, y2):
     # calculate steps required for generating pixels 
    
     steps = abs(dx) if abs(dx) > abs(dy) else abs(dy)
-         
+    if steps == 0:
+        return [[x1, y1]]
     #calculate increment in x & y for each steps
     Xinc = float(dx / steps)
     Yinc = float(dy / steps)

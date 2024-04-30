@@ -6,7 +6,6 @@ import cv2
 import numpy as np
 import math
 from bin import Bin
-from dda import dda
 
 world = Bin(5)
 
@@ -26,18 +25,10 @@ def rotateAndTransformPoint(point, x, y, r):
         point[0] * math.sin(math.radians(r)) + point[1] * math.cos(math.radians(r)) + y
     ]
 
-def doSlam(tempPoints, tempPositions):
+def doSlam(tempPoints, notBlockedPoints):
     global world
     
     # cv2.imshow("tempPoints", cv2.resize(tempPointsBin, (0,0), fx=5, fy=5))
-    notBlockedPoints = np.ndarray((0, 2))
-    for i in range(len(tempPoints)):
-        point = tempPoints[i]
-        pos = tempPositions[i]
-        notBlockedPoints = np.concatenate((notBlockedPoints, dda(pos[0]/world.binSize, pos[1]/world.binSize, point[0]/world.binSize, point[1]/world.binSize)))
-    for point in notBlockedPoints:
-        point[0] = point[0] * world.binSize
-        point[1] = point[1] * world.binSize
     
     best = None
     # for x in range(-3, 4):
@@ -48,7 +39,7 @@ def doSlam(tempPoints, tempPositions):
     #             worldCopy.array
     world.binPoints(tempPoints, 1)
     world.binPoints(notBlockedPoints, -1)
-    cv2.imshow("points", cv2.resize((world.array + 10)/20, (0,0), fx=5, fy=5, interpolation = cv2.INTER_NEAREST))
+    # cv2.imshow("points", cv2.resize((world.array + 10)/20, (0,0), fx=5, fy=5, interpolation = cv2.INTER_NEAREST))
     return 0, 0, 0
 
     # if len(points) < len(tempPoints):

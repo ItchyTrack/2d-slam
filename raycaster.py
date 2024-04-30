@@ -13,13 +13,14 @@ def raycast(x, y, dir, maxLength, error=0):
     xShift = math.cos(math.radians(dir))
     yShift = math.sin(math.radians(dir))
     while i <= maxLength:
-        i += 0.5
         try:
-            if error == 0:
-                if map[int(y+yShift*i), int(x+xShift*i)] < 100:
-                    return True, (x+xShift*i, y+yShift*i)
-            elif map[int(y+yShift*i), int(x+xShift*(i + r.randrange(-error, error)))] < 100:
-                return True, (x+xShift*i, y+yShift*(i + r.randrange(-error, error)))
+            if not (y+yShift*i > map.shape[0] or y+yShift*i < 0 or x+xShift*i > map.shape[1] or x+xShift*i < 0):
+                if error == 0:
+                    if map[int(y+yShift*i), int(x+xShift*i)] < 100:
+                        return True, (x+xShift*i, y+yShift*i)
+                elif map[int(y+yShift*i), int(x+xShift*i)] < 100:
+                    return True, (x+xShift*(i + r.randrange(-error, error)), y+yShift*(i + r.randrange(-error, error)))
         except:
             pass
-    return False, None
+        i += 0.5
+    return False, (x+xShift*maxLength, y+yShift*maxLength)
