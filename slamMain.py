@@ -6,10 +6,11 @@ import math
 import pygame
 from pygame import gfxdraw
 import raycaster
-from slam import doSlam
+from slam import doSlam, rotateAndTransformPoint, rotateAndTransformPoints
 
 points = []
 tempPoints = []
+tempPositions = []
 rot = 0
 dir = 1
 carRot = 0
@@ -21,8 +22,10 @@ deadCarRot = 0
 deadCarError = 0.03
 deadCarRotError = 0.04
 
+rotSensorAngle = 180
+
 def update(dt: float, screen, pressed):
-    global rot, dir, carRot, car, deadCar, deadCarRot, deadCarError, points, deadCarRotError, tempPoints
+    global rot, dir, carRot, car, deadCar, deadCarRot, deadCarError, points, deadCarRotError, tempPoints, tempPositions
     if pygame.K_w in pressed:
         car[0] += math.cos(math.radians(carRot)) * dt *0.1 * speed
         car[1] += math.sin(math.radians(carRot)) * dt *0.1 * speed
@@ -52,7 +55,7 @@ def update(dt: float, screen, pressed):
     elif deadCarRot < 0:
         deadCarRot + 360
 
-    for i in range(1):
+    for i in range(2):
         rot += dir * dt * 0.3
         hit, pos = raycaster.raycast(car[0], car[1], rot + carRot, 200, 0)
         if hit:
@@ -64,49 +67,45 @@ def update(dt: float, screen, pressed):
                 math.cos(math.radians(angle))*length+deadCar[0],
                 math.sin(math.radians(angle))*length+deadCar[1]
             )
-            points.append(deadPos)
-            # tempPoints.append(deadPos)
-        if rot >= 90:
+            # points.append(deadPos)
+            tempPoints.append(deadPos)
+            tempPositions.append((car[0], car[1]))
+        if rot >= rotSensorAngle:
             dir = -1
-        elif rot <= -90:
+        elif rot <= -rotSensorAngle:
             dir = 1
-    # if len(tempPoints) >= 50:
-    #     dif = doSlam(points, tempPoints)
-    #     if dif == None or type(dif[0]) == None:
-    #         for point in tempPoints:
-    #             points.append(point)
-    #     else:
-    #         dif = dif[0]
-    #         print(dif)
-    #         # dif[0, 0] = 0
-    #         # dif[0, 1] = 0
-    #         # dif[1, 0] = 0
-    #         # dif[1, 1] = 0
-    #         for point in tempPoints:
-    #             points.append(
-    #                 [
-    #                     dif[0, 0] * point[0] + dif[0, 1] * point[1] + dif[0, 2],
-    #                     dif[1, 0] * point[0] + dif[1, 1] * point[1] + dif[1, 2]
-    #                 ]
-    #             )
-    #         point = (deadCar[0], deadCar[1])
-    #         newDeadCar = [
-    #             dif[0, 0] * point[0] + dif[0, 1] * point[1] + dif[0, 2],
-    #             dif[1, 0] * point[0] + dif[1, 1] * point[1] + dif[1, 2]
-    #         ]
-    #         point = [
-    #             deadCar[0] + math.cos(math.radians(deadCarRot)),
-    #             deadCar[1] + math.sin(math.radians(deadCarRot))
-    #         ]
-    #         newDeadCarForw = [
-    #             dif[0, 0] * point[0] + dif[0, 1] * point[1] + dif[0, 2],
-    #             dif[1, 0] * point[0] + dif[1, 1] * point[1] + dif[1, 2]
-    #         ]
-    #         deadCar[0] = newDeadCar[0]
-    #         deadCar[1] = newDeadCar[1]
-    #         print(newDeadCarForw[1] - newDeadCar[1], newDeadCarForw[0] - newDeadCar[0])
-    #         deadCarRot = math.degrees(math.atan2(newDeadCarForw[1] - newDeadCar[1], newDeadCarForw[0] - newDeadCar[0]))
-    #     tempPoints = []
+    if len(tempPoints) >= 100:
+        dif = doSlam(tempPoints, tempPositions)
+        if dif == None:
+            # for point in tempPoints:
+            #     points.append(point)
+            pass
+        else:
+            x, y, r = dif[0], dif[1], dif[2]
+            # rotateAndTransformPoints(tempPoints, x, y, r, points)
+            # for point in tempPoints:
+            #     points.append(
+            #         [
+            #             dif[0, 0] * point[0] + dif[0, 1] * point[1] + dif[0, 2],
+            #             dif[1, 0] * point[0] + dif[1, 1] * point[1] + dif[1, 2]
+            #         ]
+            #     )
+            # point = (deadCar[0], deadCar[1])
+            newDeadCar = rotateAndTransformPoint(deadCar, x, y, r)
+            # point = [
+            #     deadCar[0] + math.cos(math.radians(deadCarRot)),
+            #     deadCar[1] + math.sin(math.radians(deadCarRot))
+            # ]
+            newDeadCarForw = rotateAndTransformPoint(
+                [deadCar[0] + math.cos(math.radians(deadCarRot)), deadCar[1] + math.sin(math.radians(deadCarRot))],
+                x, y, r
+            )
+            deadCar[0] = newDeadCar[0]
+            deadCar[1] = newDeadCar[1]
+            # print(newDeadCarForw[1] - newDeadCar[1], newDeadCarForw[0] - newDeadCar[0])
+            deadCarRot = math.degrees(math.atan2(newDeadCarForw[1] - newDeadCar[1], newDeadCarForw[0] - newDeadCar[0]))
+        tempPoints = []
+        tempPositions = []
 
 
 def draw(screen: pygame.Surface):
