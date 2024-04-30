@@ -25,9 +25,10 @@ deadCarRot = 0
 deadCarError = 0.03
 deadCarRotError = 0.04
 
-rotSensorAngle = 180
+rotSensorAngle = 100
 
 def update(dt: float, screen, pressed):
+    dt = 1/60*1000
     global rot, dir, carRot, car, deadCar, deadCarRot, deadCarError, points, deadCarRotError, tempPoints, notBlockedPoints
     if pygame.K_w in pressed:
         car[0] += math.cos(math.radians(carRot)) * dt *0.1 * speed
@@ -69,7 +70,7 @@ def update(dt: float, screen, pressed):
             math.cos(math.radians(angle))*length+deadCar[0],
             math.sin(math.radians(angle))*length+deadCar[1]
         )
-        notBlockedPoints = np.concatenate((notBlockedPoints, dda(deadCar[0]/world.binSize, deadCar[1]/world.binSize, deadPos[0]/world.binSize, deadPos[1]/world.binSize)))
+        notBlockedPoints = np.concatenate((notBlockedPoints, dda(deadCar[0]/world.binSize, deadCar[1]/world.binSize, deadPos[0]/world.binSize, deadPos[1]/world.binSize)))[0:-2]
         if hit:
             # points.append(deadPos)
             tempPoints.append(deadPos)
@@ -77,7 +78,7 @@ def update(dt: float, screen, pressed):
             dir = -1
         elif rot <= -rotSensorAngle:
             dir = 1
-    if len(tempPoints) >= 100:
+    if len(tempPoints) >= 50:
         for point in notBlockedPoints:
             point[0] = point[0] * world.binSize
             point[1] = point[1] * world.binSize
