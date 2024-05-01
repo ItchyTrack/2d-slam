@@ -75,12 +75,12 @@ def mainLoop():
                 pygame.quit()
                 sys.exit()
             elif event.type == VIDEORESIZE:
-                # w, h = event.size
-                # if w < 400:
-                #     w = 400
-                # if h < 300:
-                #     h = 300
-                screen = pygame.display.set_mode((width, height), HWSURFACE | DOUBLEBUF | RESIZABLE)
+                w, h = event.size
+                if w < 400:
+                    w = 400
+                if h < 300:
+                    h = 300
+                screen = pygame.display.set_mode((w, h), HWSURFACE | DOUBLEBUF | RESIZABLE)
             elif event.type == MOUSEBUTTONDOWN:
                 for func in buttonUpdates:
                     func()
@@ -91,9 +91,9 @@ def mainLoop():
         update(dt, screen, pressed)
 
         draw(screen)
-        dt = fpsClock.tick(fps)
+        # dt = fpsClock.tick(fps)
 
         pygame.display.flip()
-        fpsClock.tick(fps)
+        # fpsClock.tick(fps)
 
 mainLoop()

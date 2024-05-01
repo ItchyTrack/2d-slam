@@ -13,23 +13,23 @@ from slam import doSlam, rotateAndTransformPoint, rotateAndTransformPoints, worl
 
 points = []
 tempPoints = []
-notBlockedPoints = np.ndarray((0, 2))
+notBlockedPoints = []
 rot = 0
 dir = 1
 carRot = 0
 car = [170, 170]
 
-speed = 1
+speed = 0.5
 deadCar = [170, 170]
 deadCarRot = 0
 deadCarError = 0.03
 deadCarRotError = 0.04
 
-rotSensorAngle = 100
+rotSensorAngle = 90
 
 def update(dt: float, screen, pressed):
     dt = 1/60*1000
-    global rot, dir, carRot, car, deadCar, deadCarRot, deadCarError, points, deadCarRotError, tempPoints, notBlockedPoints
+    global rot, dir, carRot, car, deadCar, deadCarRot, deadCarError, deadCarRotError, tempPoints, notBlockedPoints
     if pygame.K_w in pressed:
         car[0] += math.cos(math.radians(carRot)) * dt *0.1 * speed
         car[1] += math.sin(math.radians(carRot)) * dt *0.1 * speed
@@ -59,7 +59,7 @@ def update(dt: float, screen, pressed):
     elif deadCarRot < 0:
         deadCarRot + 360
 
-    for i in range(2):
+    for i in range(1):
         rot += dir * dt * 0.3
         hit, pos = raycaster.raycast(car[0], car[1], rot + carRot, 200, 0)
         x = pos[0]-car[0]
@@ -70,34 +70,25 @@ def update(dt: float, screen, pressed):
             math.cos(math.radians(angle))*length+deadCar[0],
             math.sin(math.radians(angle))*length+deadCar[1]
         )
-        notBlockedPoints = np.concatenate((notBlockedPoints, dda(deadCar[0]/world.binSize, deadCar[1]/world.binSize, deadPos[0]/world.binSize, deadPos[1]/world.binSize)))[0:-2]
+        notPoints = dda(deadCar[0]/world.binSize, deadCar[1]/world.binSize, deadPos[0]/world.binSize, deadPos[1]/world.binSize)
+        if len(notPoints) != 1:
+            for point in notPoints:
+                point[0] = point[0] * world.binSize
+                point[1] = point[1] * world.binSize
+            notBlockedPoints.append(notPoints)
         if hit:
-            # points.append(deadPos)
             tempPoints.append(deadPos)
         if rot >= rotSensorAngle:
-            dir = -1
+            dir *= -1
         elif rot <= -rotSensorAngle:
-            dir = 1
-    if len(tempPoints) >= 50:
-        for point in notBlockedPoints:
-            point[0] = point[0] * world.binSize
-            point[1] = point[1] * world.binSize
+            dir *= -1
+    if len(notBlockedPoints) >= 100:
         dif = doSlam(tempPoints, notBlockedPoints)
         if dif == None:
-            # for point in tempPoints:
-            #     points.append(point)
             pass
         else:
+            print(dif)
             x, y, r = dif[0], dif[1], dif[2]
-            # rotateAndTransformPoints(tempPoints, x, y, r, points)
-            # for point in tempPoints:
-            #     points.append(
-            #         [
-            #             dif[0, 0] * point[0] + dif[0, 1] * point[1] + dif[0, 2],
-            #             dif[1, 0] * point[0] + dif[1, 1] * point[1] + dif[1, 2]
-            #         ]
-            #     )
-            # point = (deadCar[0], deadCar[1])
             newDeadCar = rotateAndTransformPoint(deadCar, x, y, r)
             # point = [
             #     deadCar[0] + math.cos(math.radians(deadCarRot)),
@@ -112,12 +103,12 @@ def update(dt: float, screen, pressed):
             # print(newDeadCarForw[1] - newDeadCar[1], newDeadCarForw[0] - newDeadCar[0])
             deadCarRot = math.degrees(math.atan2(newDeadCarForw[1] - newDeadCar[1], newDeadCarForw[0] - newDeadCar[0]))
         tempPoints = []
-        notBlockedPoints = np.ndarray((0, 2))
+        notBlockedPoints = []
 
 
 def draw(screen: pygame.Surface):
     global carRot, car, deadCar, deadCarRot
-    cv2Image =cv2.resize(cv2.cvtColor(((world.array + 10)/20*255).astype(np.uint8), cv2.COLOR_GRAY2RGB), (0,0), fx=5, fy=5, interpolation = cv2.INTER_NEAREST)
+    cv2Image =cv2.resize(cv2.cvtColor(((world.array - world.minVal)/(world.maxVal - world.minVal)*255).astype(np.uint8), cv2.COLOR_GRAY2RGB), (0,0), fx=world.binSize, fy=world.binSize, interpolation = cv2.INTER_NEAREST)
     image = pygame.image.frombuffer(cv2Image.tostring(), cv2Image.shape[1::-1], "RGB")
     screen.blit(image, (-world.xShift*world.binSize, int(screen.get_size()[1] / 2) - world.yShift*world.binSize))
     
@@ -130,8 +121,6 @@ def draw(screen: pygame.Surface):
     gfxdraw.filled_circle(screen, int(car[0]), int(car[1] + screen.get_size()[1] / 2), 5, (255, 0, 0))
     gfxdraw.filled_circle(screen, int(car[0] + math.cos(math.radians(carRot))*6), int(car[1] + math.sin(math.radians(carRot))*6), 3, (0, 255, 0))
     gfxdraw.filled_circle(screen, int(car[0] + math.cos(math.radians(carRot))*6), int(car[1] + screen.get_size()[1] / 2 + math.sin(math.radians(carRot))*6), 3, (0, 255, 0))
-    # for point in points:
-    #     gfxdraw.filled_circle(screen, int(point[0]), int(point[1]) + int(screen.get_size()[1] / 2), 2, (0, 0, 0))
 
     for point in tempPoints:
         gfxdraw.filled_circle(screen, int(point[0]), int(point[1]) + int(screen.get_size()[1] / 2), 2, (0, 255, 0))
