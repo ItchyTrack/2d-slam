@@ -10,7 +10,7 @@ import math
 from bin import Bin
 from time import sleep
 
-world = Bin(4, -2, 2, "add")
+world = Bin(4, -1, 1, "add")
 
 # shiftSize = 2
 rotSize = 0
@@ -52,7 +52,7 @@ def doSlam(tempPoints, notBlockedPointsArrays):
     notBlockedPoints = np.ndarray((0, 2))
     notBlockedPointsSmall = np.ndarray((0, 2))
     for notPoints in notBlockedPointsArrays:
-        notBlockedPoints = np.concatenate((notBlockedPoints, notPoints))
+        notBlockedPoints = np.concatenate((notBlockedPoints, notPoints[0:-1]))
         notBlockedPointsSmall = np.concatenate((notBlockedPointsSmall, notPoints[(max(len(notPoints) - 4, 0)) : -1]))
 
     notBlockedPointsBins = Bin(world.binSize, 0, 1)

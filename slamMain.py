@@ -10,6 +10,7 @@ from dda import dda
 from pygame import gfxdraw
 import raycaster
 from slam import doSlam, rotateAndTransformPoint, rotateAndTransformPoints, world
+from random import randrange
 
 points = []
 tempPoints = []
@@ -22,8 +23,8 @@ car = [170, 170]
 speed = 0.5
 deadCar = [170, 170]
 deadCarRot = 0
-deadCarError = 0.03
-deadCarRotError = 0.04
+deadCarError = 0.02
+deadCarRotError = 0.03
 
 rotSensorAngle = 90
 
@@ -31,25 +32,25 @@ def update(dt: float, screen, pressed):
     dt = 1/60*1000
     global rot, dir, carRot, car, deadCar, deadCarRot, deadCarError, deadCarRotError, tempPoints, notBlockedPoints
     if pygame.K_w in pressed:
-        car[0] += math.cos(math.radians(carRot)) * dt *0.1 * speed
-        car[1] += math.sin(math.radians(carRot)) * dt *0.1 * speed
+        car[0] += (math.cos(math.radians(carRot))) * dt *0.1 * speed * (1 + randrange(-1, 1) * deadCarError)
+        car[1] += (math.sin(math.radians(carRot))) * dt *0.1 * speed * (1 + randrange(-1, 1) * deadCarError)
         
-        deadCar[0] += (math.cos(math.radians(deadCarRot)) + deadCarError) * dt * 0.1 * speed
-        deadCar[1] += (math.sin(math.radians(deadCarRot)) + deadCarError) * dt * 0.1 * speed
+        deadCar[0] += math.cos(math.radians(deadCarRot)) * dt * 0.1 * speed
+        deadCar[1] += math.sin(math.radians(deadCarRot)) * dt * 0.1 * speed
 
     if pygame.K_s in pressed:
-        car[0] -= math.cos(math.radians(carRot)) * dt *0.1 * speed
-        car[1] -= math.sin(math.radians(carRot)) * dt *0.1 * speed
+        car[0] -= (math.cos(math.radians(carRot))) * dt *0.1 * speed * (1 + randrange(-1, 1) * deadCarError)
+        car[1] -= (math.sin(math.radians(carRot))) * dt *0.1 * speed * (1 + randrange(-1, 1) * deadCarError)
 
-        deadCar[0] -= (math.cos(math.radians(deadCarRot)) + deadCarError) * dt * 0.1 * speed
-        deadCar[1] -= (math.sin(math.radians(deadCarRot)) + deadCarError) * dt * 0.1 * speed
+        deadCar[0] -= math.cos(math.radians(deadCarRot)) * dt * 0.1 * speed
+        deadCar[1] -= math.sin(math.radians(deadCarRot)) * dt * 0.1 * speed
 
     if pygame.K_a in pressed:
-        carRot -= dt * 0.3 * speed
-        deadCarRot -= dt * 0.3 * (1 + deadCarRotError) * speed
+        carRot -= dt * 0.3 * (1 + deadCarRotError) * speed
+        deadCarRot -= dt * 0.3 * speed
     if pygame.K_d in pressed:
-        carRot += dt * 0.3 * speed
-        deadCarRot += dt * 0.3 * (1 + deadCarRotError) * speed
+        carRot += dt * 0.3 * (1 + deadCarRotError) * speed
+        deadCarRot += dt * 0.3 * speed
     if carRot > 360:
         carRot - 360
     elif carRot < 0:
